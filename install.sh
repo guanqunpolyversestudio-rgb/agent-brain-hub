@@ -6,7 +6,7 @@ set -euo pipefail
 # Usage: curl -fsSL https://raw.githubusercontent.com/GuanqunHuang/agent-brain-hub/main/install.sh | bash
 # ─────────────────────────────────────────────
 
-REPO_URL="https://github.com/GuanqunHuang/agent-brain-hub"
+REPO_URL="https://github.com/guanqunpolyversestudio-rgb/agent-brain-hub"
 INSTALL_DIR="$HOME/.brain-hub"
 SYMLINK_PATH="/usr/local/bin/brain"
 
