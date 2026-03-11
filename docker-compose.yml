@@ -1,0 +1,14 @@
+services:
+  brain-hub:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - brain-data:/data
+    environment:
+      - STORAGE_DIR=/data
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  brain-data:

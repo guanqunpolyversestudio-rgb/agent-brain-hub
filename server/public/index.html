@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Brain Hub</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0e17;--surface:#121829;--surface2:#1a2237;--surface3:#232d44;
+    --border:#2a3555;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+    --accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);
+    --green:#10b981;--cyan:#22d3ee;--pink:#f472b6;
+    --radius:12px;--radius-sm:8px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+  a{color:var(--accent2);text-decoration:none}
+
+  /* Top bar */
+  .topbar{display:flex;justify-content:flex-end;align-items:center;padding:16px 24px;gap:12px}
+  .user-info{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:.9rem}
+  .user-info img{width:32px;height:32px;border-radius:50%;border:2px solid var(--accent)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:none;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;cursor:pointer;transition:background .2s,opacity .2s}
+  .btn-google{background:#fff;color:#333;gap:8px}
+  .btn-google:hover{opacity:.9}
+  .btn-google svg{width:18px;height:18px}
+  .btn-logout{background:var(--surface3);color:var(--text2)}
+  .btn-logout:hover{background:var(--border)}
+
+  /* Hero */
+  .hero{text-align:center;padding:48px 24px 48px;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+  .hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative}
+  .hero .tagline{color:var(--text2);font-size:1.15rem;margin-top:12px;position:relative}
+  .hero .icon{font-size:3rem;margin-bottom:16px;display:block;position:relative}
+
+  /* Search */
+  .search-bar{max-width:560px;margin:0 auto 40px;padding:0 24px;position:relative}
+  .search-bar input{width:100%;padding:14px 20px 14px 48px;background:var(--surface);border:1px solid var(--border);border-radius:999px;color:var(--text);font-size:1rem;outline:none;transition:border-color .2s,box-shadow .2s}
+  .search-bar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+  .search-bar input::placeholder{color:var(--text3)}
+  .search-bar .search-icon{position:absolute;left:42px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+
+  /* Stats bar */
+  .stats-bar{display:flex;justify-content:center;gap:32px;padding:0 24px 32px;flex-wrap:wrap}
+  .stats-bar .stat{text-align:center}
+  .stats-bar .stat-val{font-size:1.5rem;font-weight:700;color:var(--accent2)}
+  .stats-bar .stat-lbl{font-size:.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;max-width:1200px;margin:0 auto;padding:0 24px 80px}
+
+  /* Card */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;cursor:pointer;display:flex;flex-direction:column}
+  .card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  .card-header{padding:20px 20px 0}
+  .card-header h3{font-size:1.15rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .card-header h3 .brain-icon{color:var(--cyan);flex-shrink:0}
+  .card-meta{display:flex;align-items:center;gap:12px;color:var(--text3);font-size:.82rem;margin-top:2px;flex-wrap:wrap}
+  .card-meta .author{color:var(--accent2)}
+  .card-meta .version{background:var(--surface3);padding:1px 8px;border-radius:999px;font-size:.75rem;color:var(--green)}
+  .card-body{padding:12px 20px 0;flex:1}
+  .card-desc{color:var(--text2);font-size:.9rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tag{background:var(--accent-glow);color:var(--accent2);font-size:.75rem;padding:3px 10px;border-radius:999px;border:1px solid rgba(99,102,241,.25)}
+  .card-footer{padding:12px 20px 16px;display:flex;justify-content:space-between;align-items:center}
+  .card-size{font-size:.8rem;color:var(--text3)}
+  .btn-download{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;cursor:pointer;transition:background .2s}
+  .btn-download:hover{background:var(--accent2)}
+
+  /* Modal */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:flex-start;padding:40px 16px;overflow-y:auto}
+  .overlay.active{display:flex}
+  .detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-width:720px;width:100%;padding:32px;position:relative;animation:slideUp .25s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  .detail .close-btn{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);font-size:1.5rem;cursor:pointer;line-height:1;transition:color .2s}
+  .detail .close-btn:hover{color:var(--text)}
+  .detail h2{font-size:1.4rem;margin-bottom:4px}
+  .detail .d-meta{color:var(--text3);font-size:.85rem;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .detail .d-desc{color:var(--text2);font-size:.95rem;margin-bottom:20px;line-height:1.7}
+  .detail .d-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:24px}
+  .detail .d-stat{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;text-align:center}
+  .detail .d-stat .val{font-size:1.3rem;font-weight:700;color:var(--accent2)}
+  .detail .d-stat .lbl{font-size:.75rem;color:var(--text3);text-transform:uppercase}
+  .detail .section-title{font-size:.9rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;margin-top:8px}
+  .detail .file-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px;font-family:'SF Mono',Consolas,monospace;font-size:.82rem;color:var(--text2);white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto}
+  .detail .file-preview .fp-name{color:var(--cyan);font-weight:600;display:block;margin-bottom:6px;font-size:.78rem}
+  .detail .d-download{margin-top:24px;text-align:center}
+  .detail .d-download .btn-download{padding:12px 32px;font-size:1rem}
+  .detail .file-list{margin-bottom:20px}
+  .detail .file-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.83rem}
+  .detail .file-item:last-child{border-bottom:none}
+  .detail .file-item .fpath{color:var(--text2);font-family:'SF Mono',Consolas,monospace}
+  .detail .file-item .fcat{color:var(--text3);font-size:.75rem;text-transform:uppercase}
+
+  .loading,.empty{text-align:center;padding:80px 24px;color:var(--text3);font-size:1.1rem}
+  .loading .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:480px){
+    .grid{grid-template-columns:1fr}
+    .hero{padding:32px 16px 24px}
+    .hero h1{font-size:1.8rem}
+    .detail{padding:20px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="loading" style="padding:0;font-size:.8rem">Loading...</div>
+</div>
+
+<section class="hero">
+  <span class="icon">&#x1F9E0;</span>
+  <h1>OpenClaw Brain Hub</h1>
+  <p class="tagline">Share, discover, and merge agent consciousness</p>
+</section>
+
+<div class="search-bar">
+  <span class="search-icon">&#x1F50D;</span>
+  <input type="text" id="searchInput" placeholder="Search brains by name or author...">
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div id="content">
+  <div class="loading"><div class="spinner"></div><br>Loading brains...</div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="detail" id="detail"></div>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  let allBrains = [];
+  let supabase = null;
+  let currentUser = null;
+
+  const GOOGLE_SVG = '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
+
+  // Initialize Supabase
+  async function initSupabase() {
+    try {
+      const res = await fetch('/api/config');
+      const config = await res.json();
+
+      // Load Supabase JS from CDN
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js');
+      supabase = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+
+      // Check for existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+      }
+
+      // Listen for auth changes (handles OAuth redirect)
+      supabase.auth.onAuthStateChange((event, session) => {
+        currentUser = session?.user || null;
+        renderTopbar();
+      });
+
+      renderTopbar();
+    } catch(e) {
+      console.error('Supabase init failed:', e);
+      renderTopbar();
+    }
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function renderTopbar() {
+    const topbar = $('#topbar');
+    if (currentUser) {
+      const avatar = currentUser.user_metadata?.avatar_url || '';
+      const name = currentUser.user_metadata?.full_name || currentUser.email || 'User';
+      topbar.innerHTML = `
+        <div class="user-info">
+          ${avatar ? '<img src="'+esc(avatar)+'" alt="avatar">' : ''}
+          <span>${esc(name)}</span>
+        </div>
+        <button class="btn btn-logout" onclick="handleLogout()">Sign Out</button>
+      `;
+    } else {
+      topbar.innerHTML = `
+        <button class="btn btn-google" onclick="handleGoogleLogin()">
+          ${GOOGLE_SVG}
+          Sign in with Google
+        </button>
+      `;
+    }
+  }
+
+  window.handleGoogleLogin = async function() {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) console.error('Login error:', error);
+  };
+
+  window.handleLogout = async function() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    currentUser = null;
+    renderTopbar();
+  };
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024, sizes = ['B','KB','MB','GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  }
+
+  function parseTags(tags) {
+    if (!tags) return [];
+    if (Array.isArray(tags)) return tags;
+    try { return JSON.parse(tags); } catch(e) { return []; }
+  }
+
+  async function loadBrains() {
+    try {
+      const res = await fetch('/brains');
+      if (!res.ok) throw new Error('Failed to fetch');
+      allBrains = await res.json();
+      renderStats();
+      renderGrid(allBrains);
+    } catch(e) {
+      $('#content').innerHTML = '<div class="empty">Could not load brains. Is the server running?</div>';
+    }
+  }
+
+  function renderStats() {
+    const bar = $('#statsBar');
+    bar.innerHTML = `
+      <div class="stat"><div class="stat-val">${allBrains.length}</div><div class="stat-lbl">Public Brains</div></div>
+      <div class="stat"><div class="stat-val">${new Set(allBrains.map(b=>b.author)).size}</div><div class="stat-lbl">Authors</div></div>
+      <div class="stat"><div class="stat-val">${formatBytes(allBrains.reduce((s,b)=>s+(b.file_size||0),0))}</div><div class="stat-lbl">Total Size</div></div>
+    `;
+  }
+
+  function renderGrid(brains) {
+    const container = $('#content');
+    if (brains.length === 0) {
+      container.innerHTML = '<div class="empty">No brains found.</div>';
+      return;
+    }
+    let html = '<div class="grid">';
+    for (const b of brains) {
+      const tags = parseTags(b.tags);
+      html += `
+        <div class="card" data-id="${b.id}">
+          <div class="card-header">
+            <h3><span class="brain-icon">&#x2B22;</span> ${esc(b.name)}</h3>
+            <div class="card-meta">
+              <span class="author">@${esc(b.author || 'unknown')}</span>
+              <span class="version">v${esc(b.version || '0.0.0')}</span>
+              <span>${formatDate(b.created_at)}</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="card-desc">${esc(b.description || 'No description provided.')}</p>
+            ${tags.length ? '<div class="card-tags">' + tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('') + '</div>' : ''}
+          </div>
+          <div class="card-footer">
+            <span class="card-size">${formatBytes(b.file_size)}</span>
+            <button class="btn-download" onclick="event.stopPropagation();window.location.href='/brains/${b.id}/download'">&#x2B07; Download</button>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => openDetail(card.dataset.id));
+    });
+  }
+
+  async function openDetail(id) {
+    const overlay = $('#overlay');
+    const detail = $('#detail');
+    overlay.classList.add('active');
+    detail.innerHTML = '<div class="loading"><div class="spinner"></div><br>Loading details...</div>';
+    document.body.style.overflow = 'hidden';
+
+    try {
+      const res = await fetch('/brains/' + id);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      const b = data;
+      const m = data.manifest || {};
+      const stats = m.stats || {};
+      const tags = parseTags(b.tags);
+      const cFiles = m.consciousness_files || [];
+      const files = m.files || [];
+
+      detail.innerHTML = `
+        <button class="close-btn" id="closeBtn">&times;</button>
+        <h2>${esc(b.name)}</h2>
+        <div class="d-meta">
+          <span>by <strong style="color:var(--accent2)">@${esc(b.author||'unknown')}</strong></span>
+          <span>v${esc(b.version||'0.0.0')}</span>
+          <span>${formatDate(b.created_at)}</span>
+          <span>${formatBytes(b.file_size)}</span>
+        </div>
+        <p class="d-desc">${esc(b.description || 'No description.')}</p>
+        ${tags.length ? '<div class="card-tags" style="margin-bottom:20px">' + tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('') + '</div>' : ''}
+
+        <div class="d-stats">
+          <div class="d-stat"><div class="val">${stats.consciousness_files||0}</div><div class="lbl">Consciousness</div></div>
+          <div class="d-stat"><div class="val">${stats.memory_files||0}</div><div class="lbl">Memory</div></div>
+          <div class="d-stat"><div class="val">${stats.skills_count||0}</div><div class="lbl">Skills</div></div>
+          <div class="d-stat"><div class="val">${stats.total_files||0}</div><div class="lbl">Total Files</div></div>
+          <div class="d-stat"><div class="val">${stats.sessions_count||0}</div><div class="lbl">Sessions</div></div>
+        </div>
+
+        ${cFiles.length ? `
+          <div class="section-title">Consciousness Files</div>
+          ${cFiles.map(cf => `<div class="file-preview"><span class="fp-name">${esc(cf)}</span></div>`).join('')}
+        ` : ''}
+
+        ${files.length ? `
+          <div class="section-title">Files (${files.length})</div>
+          <div class="file-list">
+            ${files.slice(0,20).map(f => `
+              <div class="file-item">
+                <span class="fpath">${esc(f.path)}</span>
+                <span class="fcat">${esc(f.category||'')} &middot; ${formatBytes(f.size)}</span>
+              </div>
+            `).join('')}
+            ${files.length > 20 ? '<div style="color:var(--text3);font-size:.83rem;padding:6px 0">... and ' + (files.length-20) + ' more files</div>' : ''}
+          </div>
+        ` : ''}
+
+        <div class="d-download">
+          <button class="btn-download" onclick="window.location.href='/brains/${b.id}/download'">&#x2B07; Download Brain</button>
+        </div>
+      `;
+
+      $('#closeBtn').addEventListener('click', closeDetail);
+    } catch(e) {
+      detail.innerHTML = '<button class="close-btn" id="closeBtn">&times;</button><div class="empty">Failed to load details.</div>';
+      $('#closeBtn').addEventListener('click', closeDetail);
+    }
+  }
+
+  function closeDetail() {
+    $('#overlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    const d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
+  }
+
+  // Search
+  $('#searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    if (!q) { renderGrid(allBrains); return; }
+    const filtered = allBrains.filter(b =>
+      (b.name||'').toLowerCase().includes(q) ||
+      (b.author||'').toLowerCase().includes(q)
+    );
+    renderGrid(filtered);
+  });
+
+  // Close overlay
+  $('#overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeDetail();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDetail();
+  });
+
+  // Boot
+  initSupabase();
+  loadBrains();
+})();
+</script>
+</body>
+</html>

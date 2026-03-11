@@ -1,0 +1,9 @@
+node_modules/
+dist/
+storage/
+pulled/
+merged/
+launched/
+backups/
+*.tar.gz
+supabase/.temp/
