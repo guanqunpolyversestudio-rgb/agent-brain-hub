@@ -79,8 +79,8 @@ export async function pullCommand(brainId: string, opts: PullOptions): Promise<v
   console.log(`  Skills: ${manifest.stats.skills_count}`);
   console.log(`  Memory: ${manifest.stats.memory_files} files`);
   console.log();
-  console.log(chalk.gray(`Merge with your brain: brain merge ${brainId}`));
-  console.log(chalk.gray(`Launch as new agent:   brain launch ${brainId}`));
+  console.log(chalk.gray(`Merge with your brain: openclaw_brain merge ${brainId}`));
+  console.log(chalk.gray(`Launch as new agent:   openclaw_brain launch ${brainId}`));
 }
 
 function formatSize(bytes: number): string {

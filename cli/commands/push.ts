@@ -16,6 +16,7 @@ export interface PushOptions {
   source?: string;
   server?: string;
   dryRun?: boolean;
+  authToken?: string | null;
 }
 
 export async function pushCommand(opts: PushOptions): Promise<void> {
@@ -79,9 +80,15 @@ export async function pushCommand(opts: PushOptions): Promise<void> {
     formData.append("brain", blob, `${manifest.id}.tar.gz`);
     formData.append("manifest", JSON.stringify(manifest));
 
+    const headers: Record<string, string> = {};
+    if (opts.authToken) {
+      headers["Authorization"] = `Bearer ${opts.authToken}`;
+    }
+
     const res = await fetch(`${serverUrl}/brains`, {
       method: "POST",
       body: formData,
+      headers,
     });
 
     if (!res.ok) {
@@ -93,7 +100,7 @@ export async function pushCommand(opts: PushOptions): Promise<void> {
     console.log(chalk.green(`   Uploaded successfully!`));
     console.log();
     console.log(chalk.blue(`Brain ID: ${chalk.bold(result.id)}`));
-    console.log(chalk.gray(`Pull with: brain pull ${result.id}`));
+    console.log(chalk.gray(`Pull with: openclaw_brain pull ${result.id}`));
   } catch (err) {
     if (err instanceof Error && err.message.includes("ECONNREFUSED")) {
       console.log(chalk.red(`   Cannot connect to server at ${serverUrl}`));

@@ -60,7 +60,7 @@ function resolveBrainDir(ref: string): string | null {
   const pulledDir = path.join(process.cwd(), "pulled", ref);
   if (fs.existsSync(pulledDir)) return pulledDir;
   console.log(chalk.red(`Cannot resolve brain: ${ref}`));
-  console.log(chalk.gray("Pull the brain first: brain pull <brain-id>"));
+  console.log(chalk.gray("Pull the brain first: openclaw_brain pull <brain-id>"));
   return null;
 }
 

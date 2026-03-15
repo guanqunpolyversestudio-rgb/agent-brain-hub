@@ -7,9 +7,11 @@
     "build": "tsc",
     "server": "tsx server/index.ts",
     "brain": "tsx cli/index.ts",
+    "openclaw_brain": "tsx cli/index.ts",
     "dev": "tsx watch server/index.ts"
   },
   "bin": {
+    "openclaw_brain": "./dist/cli/index.js",
     "brain": "./dist/cli/index.js"
   },
   "dependencies": {

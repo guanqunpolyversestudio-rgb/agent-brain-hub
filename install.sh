@@ -8,7 +8,7 @@ set -euo pipefail
 
 REPO_URL="https://github.com/guanqunpolyversestudio-rgb/agent-brain-hub"
 INSTALL_DIR="$HOME/.brain-hub"
-SYMLINK_PATH="/usr/local/bin/brain"
+SYMLINK_PATH="/usr/local/bin/openclaw_brain"
 
 echo "=============================="
 echo "  OpenClaw Brain Hub Installer"
@@ -100,7 +100,7 @@ if [ ! -f "$CLI_ENTRY" ]; then
   echo "⚠️  Built CLI entry not found at $CLI_ENTRY"
   echo "   Falling back to tsx runner..."
   # Create a wrapper script instead
-  WRAPPER="$INSTALL_DIR/bin/brain"
+  WRAPPER="$INSTALL_DIR/bin/openclaw_brain"
   mkdir -p "$INSTALL_DIR/bin"
   cat > "$WRAPPER" << 'WRAPPER_EOF'
 #!/usr/bin/env bash
@@ -125,12 +125,12 @@ echo "  Installation complete!"
 echo "=============================="
 echo
 echo "Usage:"
-echo "  brain list                  # List public brains"
-echo "  brain push -n MyBrain -a me # Push a brain to the hub"
-echo "  brain pull <brain-id>       # Pull a brain from the hub"
-echo "  brain diff <a> <b>          # Compare two brains"
-echo "  brain merge <brain-ref>     # Merge a brain with yours"
-echo "  brain launch <brain-ref>    # Launch an instance"
+echo "  openclaw_brain list                  # List public brains"
+echo "  openclaw_brain push -n MyBrain -a me # Push a brain to the hub"
+echo "  openclaw_brain pull <brain-id>       # Pull a brain from the hub"
+echo "  openclaw_brain diff <a> <b>          # Compare two brains"
+echo "  openclaw_brain merge <brain-ref>     # Merge a brain with yours"
+echo "  openclaw_brain launch <brain-ref>    # Launch an instance"
 echo
 echo "Server (optional):"
 echo "  cd $INSTALL_DIR && npm run server"
