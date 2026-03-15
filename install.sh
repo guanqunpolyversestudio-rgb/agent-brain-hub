@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ─────────────────────────────────────────────
 # OpenClaw Brain Hub — curl installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/GuanqunHuang/agent-brain-hub/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/guanqunpolyversestudio-rgb/agent-brain-hub/main/install.sh | bash
 # ─────────────────────────────────────────────
 
 REPO_URL="https://github.com/guanqunpolyversestudio-rgb/agent-brain-hub"
