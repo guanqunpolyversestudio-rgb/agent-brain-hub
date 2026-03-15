@@ -14,17 +14,17 @@ export async function pullCommand(brainId: string, opts: PullOptions): Promise<v
   const serverUrl = opts.server || DEFAULT_SERVER_URL;
   const outputDir = opts.output || path.join(process.cwd(), "pulled", brainId);
 
-  console.log(chalk.blue("=== Brain Pull ==="));
-  console.log(chalk.gray(`Brain ID: ${brainId}`));
+  console.log(chalk.blue("=== Brain Fetch ==="));
+  console.log(chalk.gray(`Snapshot ID: ${brainId}`));
   console.log(chalk.gray(`Server:   ${serverUrl}`));
   console.log();
 
   // Step 1: Download
-  console.log(chalk.yellow("1/3 Downloading brain..."));
+  console.log(chalk.yellow("1/3 Downloading published snapshot..."));
   const res = await fetch(`${serverUrl}/brains/${brainId}`);
   if (!res.ok) {
     if (res.status === 404) {
-      console.log(chalk.red(`Brain not found: ${brainId}`));
+      console.log(chalk.red(`Snapshot not found: ${brainId}`));
       return;
     }
     throw new Error(`Server responded with ${res.status}: ${await res.text()}`);
@@ -79,8 +79,8 @@ export async function pullCommand(brainId: string, opts: PullOptions): Promise<v
   console.log(`  Skills: ${manifest.stats.skills_count}`);
   console.log(`  Memory: ${manifest.stats.memory_files} files`);
   console.log();
-  console.log(chalk.gray(`Merge with your brain: openclaw_brain merge ${brainId}`));
   console.log(chalk.gray(`Launch as new agent:   openclaw_brain launch ${brainId}`));
+  console.log(chalk.gray(`Merge with your brain: openclaw_brain merge ${brainId}`));
 }
 
 function formatSize(bytes: number): string {

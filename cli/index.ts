@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { snapshotCommand } from "./commands/snapshot.js";
+import { publishCommand } from "./commands/publish.js";
+import { fetchCommand } from "./commands/fetch.js";
 import { pushCommand } from "./commands/push.js";
 import { pullCommand } from "./commands/pull.js";
 import { listCommand } from "./commands/list.js";
@@ -39,8 +42,47 @@ program
   });
 
 program
+  .command("snapshot")
+  .description("Create a sanitized local snapshot from your OpenClaw home")
+  .requiredOption("-n, --name <name>", "Snapshot name (e.g. 瑞希)")
+  .option("-a, --author <author>", "Author name (auto-detected from login)")
+  .option("-d, --description <desc>", "Snapshot description", "")
+  .option("-v, --version <version>", "Snapshot version", "1.0.0")
+  .option("--visibility <visibility>", "public or private", "public")
+  .option("-t, --tags <tags>", "Comma-separated tags", "")
+  .option("-s, --source <path>", "Source directory (default: ~/.openclaw)")
+  .option("-o, --output <path>", "Output directory for the saved snapshot")
+  .option("--dry-run", "Prepare a snapshot without saving it")
+  .action(async (opts) => {
+    if (!opts.author) {
+      const { loadAuthUser } = await import("./commands/login.js");
+      const user = loadAuthUser();
+      opts.author = user?.name || user?.email || "anonymous";
+    }
+    await snapshotCommand(opts);
+  });
+
+program
+  .command("publish <snapshot-path>")
+  .description("Publish a saved local snapshot to the hub")
+  .action(async (snapshotPath, opts) => {
+    opts.server = opts.server || program.opts().server;
+    opts.authToken = loadAuthToken();
+    await publishCommand(snapshotPath, opts);
+  });
+
+program
+  .command("fetch <brain-id>")
+  .description("Fetch a published snapshot from the hub")
+  .option("-o, --output <path>", "Output directory")
+  .action(async (brainId, opts) => {
+    opts.server = opts.server || program.opts().server;
+    await fetchCommand(brainId, opts);
+  });
+
+program
   .command("push")
-  .description("Push your local brain to the hub")
+  .description("Legacy convenience command: snapshot your local brain and publish it")
   .requiredOption("-n, --name <name>", "Brain name (e.g. 瑞希)")
   .option("-a, --author <author>", "Author name (auto-detected from login)")
   .option("-d, --description <desc>", "Brain description", "")
@@ -64,7 +106,7 @@ program
 
 program
   .command("pull <brain-id>")
-  .description("Pull a brain from the hub")
+  .description("Legacy alias for fetch")
   .option("-o, --output <path>", "Output directory")
   .action(async (brainId, opts) => {
     opts.server = opts.server || program.opts().server;
