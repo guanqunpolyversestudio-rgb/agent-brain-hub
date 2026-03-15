@@ -6,14 +6,23 @@ import fs from "fs";
 import path from "path";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../../shared/supabase.js";
 
-const TOKEN_PATH = path.join(
-  process.env.HOME || process.env.USERPROFILE || ".",
-  ".brain-hub",
-  "auth.json"
-);
+const HOME_DIR = process.env.HOME || process.env.USERPROFILE || ".";
+const CONFIG_DIR = process.env.XDG_CONFIG_HOME
+  ? path.join(process.env.XDG_CONFIG_HOME, "openclaw_brain")
+  : path.join(HOME_DIR, ".config", "openclaw_brain");
+const TOKEN_PATH = path.join(CONFIG_DIR, "auth.json");
+const LEGACY_TOKEN_PATH = path.join(HOME_DIR, ".brain-hub", "auth.json");
 
 export interface LoginOptions {
   server?: string;
+}
+
+function ensureTokenPath(): string {
+  if (!fs.existsSync(TOKEN_PATH) && fs.existsSync(LEGACY_TOKEN_PATH)) {
+    fs.mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
+    fs.copyFileSync(LEGACY_TOKEN_PATH, TOKEN_PATH);
+  }
+  return TOKEN_PATH;
 }
 
 /**
@@ -160,9 +169,10 @@ export async function loginCommand(_opts: LoginOptions): Promise<void> {
   const { data: { user } } = await authedClient.auth.getUser(tokens.access_token);
 
   // Save tokens locally
-  fs.mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
+  const tokenPath = ensureTokenPath();
+  fs.mkdirSync(path.dirname(tokenPath), { recursive: true });
   fs.writeFileSync(
-    TOKEN_PATH,
+    tokenPath,
     JSON.stringify(
       {
         access_token: tokens.access_token,
@@ -185,22 +195,23 @@ export async function loginCommand(_opts: LoginOptions): Promise<void> {
   console.log();
   console.log(chalk.green("Logged in successfully!"));
   if (user) {
-    console.log(
+  console.log(
       chalk.gray(
         `  ${user.user_metadata?.full_name || user.email} (${user.id.slice(0, 8)}...)`
       )
     );
   }
-  console.log(chalk.gray(`  Token saved to ${TOKEN_PATH}`));
+  console.log(chalk.gray(`  Token saved to ${tokenPath}`));
 }
 
 /**
  * Loads saved auth token. Returns null if not logged in.
  */
 export function loadAuthToken(): string | null {
-  if (!fs.existsSync(TOKEN_PATH)) return null;
+  const tokenPath = ensureTokenPath();
+  if (!fs.existsSync(tokenPath)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf-8"));
+    const data = JSON.parse(fs.readFileSync(tokenPath, "utf-8"));
     return data.access_token || null;
   } catch {
     return null;
@@ -211,9 +222,10 @@ export function loadAuthToken(): string | null {
  * Loads saved user info.
  */
 export function loadAuthUser(): { id: string; email: string; name: string } | null {
-  if (!fs.existsSync(TOKEN_PATH)) return null;
+  const tokenPath = ensureTokenPath();
+  if (!fs.existsSync(tokenPath)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf-8"));
+    const data = JSON.parse(fs.readFileSync(tokenPath, "utf-8"));
     return data.user || null;
   } catch {
     return null;
@@ -221,9 +233,19 @@ export function loadAuthUser(): { id: string; email: string; name: string } | nu
 }
 
 export async function logoutCommand(): Promise<void> {
-  if (fs.existsSync(TOKEN_PATH)) {
-    fs.unlinkSync(TOKEN_PATH);
+  const removedPaths: string[] = [];
+  for (const tokenPath of [TOKEN_PATH, LEGACY_TOKEN_PATH]) {
+    if (fs.existsSync(tokenPath)) {
+      fs.unlinkSync(tokenPath);
+      removedPaths.push(tokenPath);
+    }
+  }
+
+  if (removedPaths.length > 0) {
     console.log(chalk.green("Logged out. Token removed."));
+    for (const tokenPath of removedPaths) {
+      console.log(chalk.gray(`  Removed ${tokenPath}`));
+    }
   } else {
     console.log(chalk.gray("Not logged in."));
   }

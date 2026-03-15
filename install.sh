@@ -7,8 +7,14 @@ set -euo pipefail
 # ─────────────────────────────────────────────
 
 REPO_URL="https://github.com/guanqunpolyversestudio-rgb/agent-brain-hub"
-INSTALL_DIR="$HOME/.brain-hub"
-SYMLINK_PATH="/usr/local/bin/openclaw_brain"
+INSTALL_DIR="$HOME/.openclaw_brain"
+LEGACY_INSTALL_DIR="$HOME/.brain-hub"
+
+if [[ ":$PATH:" == *":/opt/homebrew/bin:"* ]]; then
+  SYMLINK_PATH="/opt/homebrew/bin/openclaw_brain"
+else
+  SYMLINK_PATH="/usr/local/bin/openclaw_brain"
+fi
 
 echo "=============================="
 echo "  OpenClaw Brain Hub Installer"
@@ -67,16 +73,35 @@ fi
 echo "npm $(npm -v) ✓"
 echo
 
+clone_or_update_repo() {
+  local target_dir="$1"
+
+  if [ -d "$target_dir/.git" ]; then
+    echo "Updating existing installation at $target_dir..."
+    cd "$target_dir"
+    git pull --ff-only
+  elif [ -d "$target_dir" ]; then
+    local backup_dir="${target_dir}.backup.$(date +%Y%m%d%H%M%S)"
+    echo "Found non-git directory at $target_dir."
+    echo "Moving it to $backup_dir..."
+    mv "$target_dir" "$backup_dir"
+    echo "Cloning repository to $target_dir..."
+    git clone "$REPO_URL" "$target_dir"
+    cd "$target_dir"
+  else
+    echo "Cloning repository to $target_dir..."
+    git clone "$REPO_URL" "$target_dir"
+    cd "$target_dir"
+  fi
+}
+
 # ── Clone or update repo ──
-if [ -d "$INSTALL_DIR" ]; then
-  echo "Updating existing installation at $INSTALL_DIR..."
-  cd "$INSTALL_DIR"
-  git pull --ff-only
-else
-  echo "Cloning repository to $INSTALL_DIR..."
-  git clone "$REPO_URL" "$INSTALL_DIR"
-  cd "$INSTALL_DIR"
+if [ ! -d "$INSTALL_DIR" ] && [ -d "$LEGACY_INSTALL_DIR/.git" ]; then
+  echo "Migrating existing installation from $LEGACY_INSTALL_DIR to $INSTALL_DIR..."
+  mv "$LEGACY_INSTALL_DIR" "$INSTALL_DIR"
 fi
+
+clone_or_update_repo "$INSTALL_DIR"
 
 echo
 
@@ -111,12 +136,22 @@ WRAPPER_EOF
   CLI_ENTRY="$WRAPPER"
 fi
 
+chmod +x "$CLI_ENTRY"
+
 if [ -L "$SYMLINK_PATH" ] || [ -e "$SYMLINK_PATH" ]; then
   echo "Removing existing $SYMLINK_PATH..."
-  sudo rm -f "$SYMLINK_PATH"
+  if [ -w "$(dirname "$SYMLINK_PATH")" ]; then
+    rm -f "$SYMLINK_PATH"
+  else
+    sudo rm -f "$SYMLINK_PATH"
+  fi
 fi
 
-sudo ln -s "$CLI_ENTRY" "$SYMLINK_PATH"
+if [ -w "$(dirname "$SYMLINK_PATH")" ]; then
+  ln -s "$CLI_ENTRY" "$SYMLINK_PATH"
+else
+  sudo ln -s "$CLI_ENTRY" "$SYMLINK_PATH"
+fi
 echo
 
 # ── Done ──
