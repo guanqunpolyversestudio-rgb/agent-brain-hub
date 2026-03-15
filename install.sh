@@ -168,8 +168,10 @@ echo "  openclaw_brain merge <brain-ref>     # Merge a brain with yours"
 echo "  openclaw_brain launch <brain-ref>    # Launch an instance"
 echo
 echo "Server (optional):"
-echo "  cd $INSTALL_DIR && npm run server"
+echo "  Default server: https://openclaw-brain-hub.fly.dev"
+echo "  Self-host: cd $INSTALL_DIR && npm run server"
 echo
-echo "Set a custom server URL:"
+echo "Set a custom or local server URL:"
 echo "  export BRAIN_HUB_URL=https://your-server.example.com"
+echo "  export BRAIN_HUB_URL=http://localhost:3000"
 echo

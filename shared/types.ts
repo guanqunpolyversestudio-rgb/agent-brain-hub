@@ -97,6 +97,6 @@ export interface RedactPattern {
   replacement: string;   // what to replace with
 }
 
-export const DEFAULT_SERVER_URL = "http://localhost:3000";
+export const DEFAULT_SERVER_URL = "https://openclaw-brain-hub.fly.dev";
 
 export const OPENCLAW_HOME = `${process.env.HOME}/.openclaw`;

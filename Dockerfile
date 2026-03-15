@@ -15,15 +15,9 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
-# Create data volume for persistent storage (SQLite DB + brain files)
-RUN mkdir -p /data
-VOLUME /data
-
-# Set storage directory
-ENV STORAGE_DIR=/data
 ENV NODE_ENV=production
 ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["npx", "tsx", "server/index.ts"]
+CMD ["node", "dist/server/index.js"]

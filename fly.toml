@@ -4,7 +4,6 @@ primary_region = "sjc"
 [build]
 
 [env]
-  STORAGE_DIR = "/data"
   NODE_ENV = "production"
   PORT = "3000"
 
@@ -13,8 +12,4 @@ primary_region = "sjc"
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
-
-[mounts]
-  source = "brain_data"
-  destination = "/data"
+  min_machines_running = 1

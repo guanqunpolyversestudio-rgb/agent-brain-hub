@@ -7,6 +7,7 @@ import { diffCommand } from "./commands/diff.js";
 import { mergeCommand } from "./commands/merge.js";
 import { launchCommand } from "./commands/launch.js";
 import { loginCommand, logoutCommand, whoamiCommand, loadAuthToken } from "./commands/login.js";
+import { DEFAULT_SERVER_URL } from "../shared/types.js";
 
 const program = new Command();
 
@@ -14,7 +15,7 @@ program
   .name("openclaw_brain")
   .description("OpenClaw Brain Hub CLI - share, pull, and merge agent brains")
   .version("0.1.0")
-  .option("--server <url>", "Server URL", process.env.BRAIN_HUB_URL || "http://localhost:3000");
+  .option("--server <url>", "Server URL", process.env.BRAIN_HUB_URL || DEFAULT_SERVER_URL);
 
 program
   .command("login")
