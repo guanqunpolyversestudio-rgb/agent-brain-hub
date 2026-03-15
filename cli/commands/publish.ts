@@ -59,8 +59,9 @@ export async function uploadSnapshotArtifacts(
   opts: UploadOptions
 ): Promise<{ id: string }> {
   const formData = new FormData();
-  const tarballBuffer = fs.readFileSync(tarballPath);
-  const blob = new Blob([tarballBuffer]);
+  const blob = typeof fs.openAsBlob === "function"
+    ? await fs.openAsBlob(tarballPath, { type: "application/gzip" })
+    : new Blob([fs.readFileSync(tarballPath)], { type: "application/gzip" });
   formData.append("brain", blob, `${manifest.id}.tar.gz`);
   formData.append("manifest", JSON.stringify(manifest));
 

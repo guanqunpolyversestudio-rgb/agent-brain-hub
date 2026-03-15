@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules
+dist
+storage
+snapshots
+pulled
+merged
+backups
+launched
+.DS_Store
+*.log

@@ -12,6 +12,8 @@ const router = Router();
 
 // POST /brains - Upload a brain
 router.post("/", upload.single("brain"), async (req: Request, res: Response) => {
+  const file = req.file;
+
   try {
     const manifestStr = req.body?.manifest;
     if (!manifestStr) {
@@ -20,7 +22,6 @@ router.post("/", upload.single("brain"), async (req: Request, res: Response) => 
     }
 
     const manifest: BrainManifest = JSON.parse(manifestStr);
-    const file = req.file;
 
     if (!file) {
       res.status(400).json({ error: "Missing brain tarball" });
@@ -29,21 +30,18 @@ router.post("/", upload.single("brain"), async (req: Request, res: Response) => 
 
     const supabase = getServiceClient();
 
-    // Read file and compute checksum
-    const fileBuffer = fs.readFileSync(file.path);
-    const checksum = createHash("sha256").update(fileBuffer).digest("hex");
+    const checksum = await checksumFile(file.path);
+    const fileSize = fs.statSync(file.path).size;
 
     // Upload tarball to Supabase Storage
     const storagePath = `${manifest.id}/${manifest.id}.tar.gz`;
     const { error: uploadError } = await supabase.storage
       .from("brains")
-      .upload(storagePath, fileBuffer, {
+      .upload(storagePath, fs.createReadStream(file.path), {
         contentType: "application/gzip",
         upsert: true,
+        duplex: "half",
       });
-
-    // Clean up temp file
-    fs.unlinkSync(file.path);
 
     if (uploadError) {
       console.error("Storage upload error:", uploadError);
@@ -71,7 +69,7 @@ router.post("/", upload.single("brain"), async (req: Request, res: Response) => 
       version: manifest.version,
       tags: manifest.tags,
       file_path: storagePath,
-      file_size: fileBuffer.length,
+      file_size: fileSize,
       checksum,
       manifest,
     });
@@ -91,6 +89,10 @@ router.post("/", upload.single("brain"), async (req: Request, res: Response) => 
   } catch (err) {
     console.error("Upload error:", err);
     res.status(500).json({ error: "Upload failed" });
+  } finally {
+    if (file?.path) {
+      fs.rmSync(file.path, { force: true });
+    }
   }
 });
 
@@ -201,3 +203,18 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 export default router;
+
+async function checksumFile(filePath: string): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const hash = createHash("sha256");
+    const stream = fs.createReadStream(filePath);
+
+    stream.on("data", (chunk) => {
+      hash.update(chunk);
+    });
+    stream.on("error", reject);
+    stream.on("end", () => {
+      resolve(hash.digest("hex"));
+    });
+  });
+}

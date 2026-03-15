@@ -5,6 +5,8 @@ import { collectBrain } from "./collector.js";
 import { sanitizeBrain } from "./sanitizer.js";
 import { packageBrain } from "./packager.js";
 
+const HOME_DIR = process.env.HOME || process.env.USERPROFILE || ".";
+
 export interface SnapshotMetadata {
   name: string;
   author: string;
@@ -59,9 +61,9 @@ export async function prepareSnapshot(opts: SnapshotMetadata): Promise<PreparedS
 }
 
 export function persistSnapshot(prepared: PreparedSnapshot, outputDir?: string): string {
-  const snapshotDir = path.resolve(
-    outputDir || path.join(process.cwd(), "snapshots", prepared.manifest.id)
-  );
+  const snapshotDir = outputDir
+    ? path.resolve(outputDir)
+    : path.join(getDataDir(), "snapshots", prepared.manifest.id);
 
   if (fs.existsSync(snapshotDir) && fs.readdirSync(snapshotDir).length > 0) {
     throw new Error(`Snapshot output already exists: ${snapshotDir}`);
@@ -132,4 +134,21 @@ function copyDirRecursive(src: string, dst: string): void {
       fs.copyFileSync(srcPath, dstPath);
     }
   }
+}
+
+function getDataDir(): string {
+  if (process.env.XDG_DATA_HOME) {
+    return path.join(process.env.XDG_DATA_HOME, "openclaw_brain");
+  }
+
+  if (process.platform === "darwin") {
+    return path.join(HOME_DIR, "Library", "Application Support", "openclaw_brain");
+  }
+
+  if (process.platform === "win32") {
+    const localAppData = process.env.LOCALAPPDATA || path.join(HOME_DIR, "AppData", "Local");
+    return path.join(localAppData, "openclaw_brain");
+  }
+
+  return path.join(HOME_DIR, ".local", "share", "openclaw_brain");
 }
