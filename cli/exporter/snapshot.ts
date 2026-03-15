@@ -6,6 +6,7 @@ import { sanitizeBrain } from "./sanitizer.js";
 import { packageBrain } from "./packager.js";
 
 const HOME_DIR = process.env.HOME || process.env.USERPROFILE || ".";
+const OPENCLAW_BRAIN_HOME = path.join(HOME_DIR, ".openclaw_brain");
 
 export interface SnapshotMetadata {
   name: string;
@@ -137,18 +138,5 @@ function copyDirRecursive(src: string, dst: string): void {
 }
 
 function getDataDir(): string {
-  if (process.env.XDG_DATA_HOME) {
-    return path.join(process.env.XDG_DATA_HOME, "openclaw_brain");
-  }
-
-  if (process.platform === "darwin") {
-    return path.join(HOME_DIR, "Library", "Application Support", "openclaw_brain");
-  }
-
-  if (process.platform === "win32") {
-    const localAppData = process.env.LOCALAPPDATA || path.join(HOME_DIR, "AppData", "Local");
-    return path.join(localAppData, "openclaw_brain");
-  }
-
-  return path.join(HOME_DIR, ".local", "share", "openclaw_brain");
+  return OPENCLAW_BRAIN_HOME;
 }
